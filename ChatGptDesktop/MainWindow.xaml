@@ -5,8 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatGptDesktop"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Background="#262626"
+        Title="Chat GPT Desktop" Height="620" Width="900">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="29*"/>
+            <ColumnDefinition Width="121*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="121*"/>
+            <RowDefinition Height="30*"/>
+        </Grid.RowDefinitions>
 
     </Grid>
 </Window>
