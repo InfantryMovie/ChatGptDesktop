@@ -1,0 +1,215 @@
+﻿<Window
+    x:Class="ChatGptDesktop.View.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:ChatGptDesktop.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Chat GPT Desktop"
+    MinWidth="1280"
+    MinHeight="720"
+    MaxWidth="2560"
+    MaxHeight="1440"
+    Background="#262626"
+    mc:Ignorable="d">
+    <Window.DataContext>
+        <local:MainViewModel />
+    </Window.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="215*" />
+            <ColumnDefinition Width="21*" />
+            <ColumnDefinition Width="1044*" />
+            <ColumnDefinition Width="5*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="534*" />
+            <RowDefinition Height="157*" />
+            <RowDefinition Height="13*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            x:Name="Grid_leftMenu"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="0,0,20,0"
+            Background="#1b1a1a">
+            <StackPanel>
+                <Border
+                    Width="115"
+                    Height="35"
+                    Margin="10"
+                    Background="#343333"
+                    CornerRadius="5">
+                    <Button
+                        Width="115"
+                        Height="75"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding ClearMessageContextCommand}"
+                        Content="Очистить Контекст"
+                        Foreground="White" />
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <Grid
+            x:Name="Grid_gptMessages"
+            Grid.Row="0"
+            Grid.Column="1"
+            Grid.ColumnSpan="3"
+            Margin="20,0,20,0">
+            <ListBox
+                x:Name="MessagesListBox"
+                Width="{Binding ActualWidth, ElementName=Grid_gptMessages}"
+                Background="#262626"
+                BorderThickness="0"
+                ItemsSource="{Binding Messages}"
+                Loaded="MessagesListBox_Loaded"
+                ScrollViewer.CanContentScroll="False"
+                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="IsSelected" Value="{Binding Content.IsSelected, Mode=TwoWay, RelativeSource={RelativeSource Self}}" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter Width="{Binding ActualWidth, ElementName=Grid_gptMessages}" Margin="-2,0,0,0" />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            x:Name="borderMessage"
+                            Margin="5"
+                            Background="#161616"
+                            CornerRadius="10">
+                            <StackPanel Margin="5">
+                                <TextBlock
+                                    FontSize="16"
+                                    FontWeight="Bold"
+                                    Foreground="LightBlue"
+                                    Text="{Binding Role}" />
+                                <TextBox
+                                    Width="auto"
+                                    Height="auto"
+                                    Margin="0"
+                                    VerticalContentAlignment="Center"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="0"
+                                    FontSize="16"
+                                    FontWeight="Bold"
+                                    Foreground="LightGray"
+                                    HorizontalScrollBarVisibility="Hidden"
+                                    IsReadOnly="True"
+                                    SelectionBrush="LightGray"
+                                    SelectionOpacity="0.3"
+                                    Text="{Binding Content}"
+                                    TextWrapping="Wrap"
+                                    VerticalScrollBarVisibility="Auto" />
+
+                                <TextBlock
+                                    VerticalAlignment="Bottom"
+                                    FontSize="10"
+                                    FontStyle="Italic"
+                                    Foreground="Gray"
+                                    Text="{Binding Created}" />
+                            </StackPanel>
+
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+
+        <Grid
+            x:Name="Grid_gptSendMessages"
+            Grid.Row="1"
+            Grid.Column="2"
+            Grid.ColumnSpan="2">
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Stretch"
+                Orientation="Horizontal">
+                <Border
+                    Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType={x:Type StackPanel}}}"
+                    MinWidth="800"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Stretch"
+                    Background="#343333"
+                    CornerRadius="25">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <TextBox
+                                Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType={x:Type StackPanel}}}"
+                                MinWidth="800"
+                                MinHeight="80"
+                                MaxHeight="160"
+                                Margin="10"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                AcceptsReturn="True"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Foreground="White"
+                                KeyDown="TextBox_KeyDown"
+                                Text="{Binding UserInput, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap" />
+                        </ScrollViewer>
+
+
+                        <!--
+                        <Grid>
+                            <StackPanel Margin="5" Orientation="Horizontal">
+                                <TextBlock Foreground="White" Text="Prompt Tokens: " />
+                                <TextBlock Foreground="LightGreen" Text="{Binding PromptTokens}" />
+                                <TextBlock Foreground="White" Text=" | Completion Tokens: " />
+                                <TextBlock Foreground="LightGreen" Text="{Binding CompletionTokens}" />
+                                <TextBlock Foreground="White" Text=" | Total Tokens: " />
+                                <TextBlock Foreground="LightGreen" Text="{Binding TotalTokens}" />
+                            </StackPanel>
+                        </Grid>
+                        -->
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Width="75"
+                    Height="75"
+                    Margin="15,0,-15,0"
+                    Background="#343333"
+                    CornerRadius="100">
+                    <Button
+                        Width="75"
+                        Height="75"
+                        HorizontalAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding SendMessageCommand}"
+                        Content="Send"
+                        Foreground="White" />
+                </Border>
+            </StackPanel>
+
+
+
+        </Grid>
+
+    </Grid>
+</Window>
