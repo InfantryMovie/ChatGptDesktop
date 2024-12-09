@@ -108,13 +108,40 @@ namespace ChatGptDesktop.ViewModel
         {
             // Загружаем все сообщения из базы данных
             var chatMessages = await _dbContext.ChatMessages.ToListAsync();
+            var userRequest = await _dbContext.UserRequests.ToListAsync();
 
-            // Добавляем их в ObservableCollection
+            List<ChatResponseDb> sortedList = new List<ChatResponseDb>();
+
             foreach (var message in chatMessages)
             {
-                Messages.Add(message);
-                AddMessage(message.Role == "ChatGPT" ? "assistant" : "user", message.Content);
+                sortedList.Add(message);
             }
+
+            foreach (var request in userRequest)
+            {
+                var chatResponseDb = new ChatResponseDb
+                {
+                    ResponseId = Guid.NewGuid().ToString(),
+                    Object = "chat.completion",
+                    Created = request.CreatedAt,
+                    Role = "user",
+                    Content = request.UserInput,
+                    PromptTokens = 0,
+                    CompletionTokens = 0,
+                    TotalTokens = 0,
+                    ProfileId = request.ProfileId
+                };
+                sortedList.Add(chatResponseDb);
+            }
+
+            sortedList = sortedList.OrderByDescending( x => x.Created).ToList();
+
+            foreach (var chatResponseDb in sortedList) 
+            {
+                Messages.Add(chatResponseDb);
+                AddMessageHistory(chatResponseDb.Role, chatResponseDb.Content);
+            }
+
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
@@ -149,7 +176,7 @@ namespace ChatGptDesktop.ViewModel
                     ResponseId = chatResponse.Id,
                     Object = chatResponse.Object,
                     Created = DateTimeOffset.FromUnixTimeSeconds(chatResponse.Created).DateTime,
-                    Role = "ChatGPT",// choice.Message.Role
+                    Role = choice.Message.Role,
                     Content = choice.Message.Content,
                     PromptTokens = chatResponse.Usage.PromptTokens,
                     CompletionTokens = chatResponse.Usage.CompletionTokens,
@@ -336,7 +363,7 @@ namespace ChatGptDesktop.ViewModel
             return foundChild;
         }
 
-        void AddMessage(string role, string content)
+        void AddMessageHistory(string role, string content)
         {
             messageHistory.Add(new { role = role, content = content });
         }
@@ -349,7 +376,7 @@ namespace ChatGptDesktop.ViewModel
                 return null;
            }
 
-            AddMessage("user", userInput);
+            AddMessageHistory("user", userInput);
             Console.WriteLine("Добавлен в контекст запрос пользователя");
 
             var requestObject = new
@@ -381,7 +408,7 @@ namespace ChatGptDesktop.ViewModel
                     string jsonResponse = await response.Content.ReadAsStringAsync();
                     var chatResponse = JsonConvert.DeserializeObject<ChatResponse>(jsonResponse);
                     string answerGpt = chatResponse.Choices[0].Message.Content.ToString();
-                    AddMessage("assistant", answerGpt);
+                    AddMessageHistory("assistant", answerGpt);
                     Console.WriteLine("Получен ответ от ChatGPT.");
 
                     //сохраняем запрос пользователя
@@ -393,6 +420,23 @@ namespace ChatGptDesktop.ViewModel
 
                     _dbContext.UserRequests.Add(userRequest);
                     await _dbContext.SaveChangesAsync();
+
+                    //для бодавления запроса в чат и базу
+                    var userRequestDb = new ChatResponseDb
+                    {
+                        ResponseId = Guid.NewGuid().ToString(),
+                        Object = "chat.completion",
+                        Created = userRequest.CreatedAt,
+                        Role = "user",
+                        Content = userRequest.UserInput,
+                        PromptTokens = 0,
+                        CompletionTokens = 0,
+                        TotalTokens = 0,
+                        ProfileId = userRequest.ProfileId
+                    };
+
+                    Messages.Add(userRequestDb);
+                    AddMessageHistory(userRequestDb.Role, userRequestDb.Content);
 
                     return chatResponse;
                 }
