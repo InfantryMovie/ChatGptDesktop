@@ -12,6 +12,7 @@ namespace ChatGptDesktop.Model
     {
         public DbSet<ChatResponseDb> ChatMessages { get; set; }
         public DbSet<ChatContextDb> ChatContexts { get; set; }
+        public DbSet<UserRequestDb> UserRequests { get; set; }
 
         readonly string _dbPath;
 
@@ -29,12 +30,18 @@ namespace ChatGptDesktop.Model
         {
             // Настройка таблицы ChatMessages
             modelBuilder.Entity<ChatResponseDb>().ToTable("ChatMessages").HasKey(c => c.Id);
+            modelBuilder.Entity<UserRequestDb>().ToTable("UserRequests").HasKey(u => u.Id);
 
             // Связь между сообщениями и профилями
             modelBuilder.Entity<ChatResponseDb>()
                 .HasOne(c => c.Profile)
                 .WithMany(p => p.ChatMessages)
                 .HasForeignKey(c => c.ProfileId);
+
+            modelBuilder.Entity<UserRequestDb>()
+           .HasOne(u => u.Profile)
+           .WithMany(p => p.UserRequests) // Добавьте коллекцию запросов в ChatContextDb
+           .HasForeignKey(u => u.ProfileId);
 
             // Настройка таблицы ChatContexts
             modelBuilder.Entity<ChatContextDb>().ToTable("ChatContexts").HasKey(c => c.Id);

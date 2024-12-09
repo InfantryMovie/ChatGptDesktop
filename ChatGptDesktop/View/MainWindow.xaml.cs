@@ -24,7 +24,7 @@ namespace ChatGptDesktop.View
     {
         [DllImport("kernel32.dll")]
         static extern bool AllocConsole();
-        Key LastKet { get; set; }
+        Key LastKey { get; set; }
         public MainWindow()
         {
             InitializeComponent();
@@ -35,6 +35,8 @@ namespace ChatGptDesktop.View
                 // Применение всех миграций при запуске приложения
                 dbContext.Database.EnsureCreated();  // Создаст базу данных и все таблицы, если их нет
             }
+
+            
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -43,7 +45,6 @@ namespace ChatGptDesktop.View
             {
                 viewModel.MessageListBox = sender as ListBox;
                 viewModel.ScrollToBottom();
-
             }
         }
 
@@ -84,50 +85,57 @@ namespace ChatGptDesktop.View
                     var scrollViewer = FindVisualChild<ScrollViewer>(viewModel.MessageListBox);
                     scrollViewer?.ScrollToBottom();
                 }, System.Windows.Threading.DispatcherPriority.Loaded);
+
+                Console.WriteLine("Готовы к работе.");
             }
         }
 
 
-        private async void TextBox_KeyDown(object sender, KeyEventArgs e)
+        async void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
             var textBox = sender as TextBox;
             if (textBox == null)
                 return;
 
-            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Shift)
+            // Проверяем, если нажата клавиша Enter
+            if (e.Key == Key.Enter)
             {
-                // Если Shift + Enter, добавляем новую строку
-                if (DataContext is MainViewModel viewModel)
+                // Если Shift + Enter
+                if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
                 {
-                    viewModel.UserInput += "\n";
+                    // Добавляем новую строку
+                    if (DataContext is MainViewModel viewModel)
+                    {
+                        viewModel.UserInput += "\n";
+                    }
+
+                    // Прокручиваем текст
+                    await Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        textBox.ScrollToEnd();
+                    }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                    e.Handled = true; // Предотвращаем стандартное поведение
                 }
-
-                // Отложенная прокрутка, чтобы текст был виден
-                Dispatcher.BeginInvoke(new Action(() =>
+                else
                 {
-                    textBox.ScrollToEnd();  // Прокрутка в конец
-                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    // Если просто Enter, отправляем сообщение
+                    if (DataContext is MainViewModel viewModel2)
+                    {
+                        viewModel2.MessageListBox = sender as ListBox;
+                        await viewModel2.SendMessage();
+                    }
 
-                e.Handled = true; // Чтобы предотвратить стандартное поведение Enter
-            }
-            else if (e.Key == Key.Enter)
-            {
-                // Если просто Enter, вызываем команду отправки сообщения
-                if (DataContext is MainViewModel viewModel2)
-                {
-                    viewModel2.MessageListBox = sender as ListBox;
-                    await viewModel2.SendMessage();
+                    // Прокручиваем текст
+                    await Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        textBox.ScrollToEnd();
+                    }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                    e.Handled = true; // Предотвращаем стандартное поведение
                 }
-
-                // Отложенная прокрутка, чтобы текст был виден
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    textBox.ScrollToEnd();  // Прокрутка в конец
-                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
         }
-
-
 
     }
 }

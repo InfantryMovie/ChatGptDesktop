@@ -12,5 +12,6 @@ namespace ChatGptDesktop.Model
         public int Id { get; set; } // Первичный ключ для профиля
         public string Name { get; set; } // Название профиля (первые 15 символов из первого ответа)        
         public ICollection<ChatResponseDb> ChatMessages { get; set; } // Навигационное свойство
+        public ICollection<UserRequestDb> UserRequests { get; set; }
     }
 }

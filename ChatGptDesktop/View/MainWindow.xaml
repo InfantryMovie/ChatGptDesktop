@@ -202,7 +202,7 @@
                         Background="Transparent"
                         BorderThickness="0"
                         Command="{Binding SendMessageCommand}"
-                        Content="Send"
+                        Content="Отправить"
                         Foreground="White" />
                 </Border>
             </StackPanel>

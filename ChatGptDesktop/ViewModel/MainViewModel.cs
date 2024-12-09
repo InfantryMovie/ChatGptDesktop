@@ -98,7 +98,8 @@ namespace ChatGptDesktop.ViewModel
             }
 
             LoadMessagesFromDatabase();
-            
+
+
         }
 
         
@@ -112,6 +113,7 @@ namespace ChatGptDesktop.ViewModel
             foreach (var message in chatMessages)
             {
                 Messages.Add(message);
+                AddMessage(message.Role == "ChatGPT" ? "assistant" : "user", message.Content);
             }
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -134,7 +136,7 @@ namespace ChatGptDesktop.ViewModel
                 SetCurrentProfile(currentProfileId);
 
                 // получаем ответ от ChatGPT
-                var chatResponse = await FetchResponseFromApi(UserInput);
+                var chatResponse = await FetchResponseFromApi(UserInput, currentProfileId);
 
                 if (chatResponse == null) return;
 
@@ -147,7 +149,7 @@ namespace ChatGptDesktop.ViewModel
                     ResponseId = chatResponse.Id,
                     Object = chatResponse.Object,
                     Created = DateTimeOffset.FromUnixTimeSeconds(chatResponse.Created).DateTime,
-                    Role = choice.Message.Role,
+                    Role = "ChatGPT",// choice.Message.Role
                     Content = choice.Message.Content,
                     PromptTokens = chatResponse.Usage.PromptTokens,
                     CompletionTokens = chatResponse.Usage.CompletionTokens,
@@ -158,6 +160,7 @@ namespace ChatGptDesktop.ViewModel
                 // Сохраняем сообщение в базу данных
                 _dbContext.ChatMessages.Add(chatResponseDb);
                 await _dbContext.SaveChangesAsync();
+                Console.WriteLine("Сохраняем данные в базе данных.");
 
                 // Добавляем сообщение в UI
                 Messages.Add(chatResponseDb);
@@ -168,6 +171,7 @@ namespace ChatGptDesktop.ViewModel
                 LastMessageContent = chatResponseDb.Content;
                 TotalTokens = chatResponseDb.TotalTokens;
 
+                UserInput = string.Empty;
 
             }
             catch (Exception ex)
@@ -177,38 +181,7 @@ namespace ChatGptDesktop.ViewModel
             }
         }
 
-        async Task<int> GetCurrentProfileId(string firstMessageContent)
-        {
-            // Проверяем, есть ли профили в базе данных
-            var existingProfile = _dbContext.ChatContexts.FirstOrDefault();
-
-            if (existingProfile == null)
-            {
-                // Если профилей нет, создаем первый
-
-                // Получаем первые 15 символов сообщения
-                string profileName = firstMessageContent.Length > 15
-                    ? firstMessageContent.Substring(0, 15)
-                    : firstMessageContent;
-
-                // Генерируем уникальный ID
-                int newId = await GenerateUniqueIdAsync();
-
-                var defaultProfile = new ChatContextDb
-                {
-                    Id = newId,
-                    Name = profileName
-                };
-
-                _dbContext.ChatContexts.Add(defaultProfile);
-                _dbContext.SaveChanges();
-
-                return defaultProfile.Id; // Возвращаем ID созданного профиля
-            }
-
-            // Если профиль есть, возвращаем его ID
-            return existingProfile.Id;
-        }
+        
 
         private async Task<int> GenerateUniqueIdAsync()
         {
@@ -262,6 +235,7 @@ namespace ChatGptDesktop.ViewModel
             if (existingProfile == null)
             {
                 // Если профилей нет, создаем первый профиль и контекст
+                Console.WriteLine("Создаем новый профиль...");
                 return await CreateNewContextAsync(firstMessageContent);
             }
 
@@ -367,7 +341,7 @@ namespace ChatGptDesktop.ViewModel
             messageHistory.Add(new { role = role, content = content });
         }
 
-        private async Task<ChatResponse> FetchResponseFromApi(string userInput)
+        private async Task<ChatResponse> FetchResponseFromApi(string userInput, int currentProfileId)
         {
            if(string.IsNullOrEmpty(ApiKey))
            {
@@ -376,6 +350,7 @@ namespace ChatGptDesktop.ViewModel
            }
 
             AddMessage("user", userInput);
+            Console.WriteLine("Добавлен в контекст запрос пользователя");
 
             var requestObject = new
             {
@@ -389,6 +364,7 @@ namespace ChatGptDesktop.ViewModel
 
             using (var client = CreateHttpClientWithProxy())
             {
+                Console.WriteLine("Отправляем запрос к ChatGPT...");
                 var httpContent = new StringContent(requestData, Encoding.UTF8, "application/json");
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiKey);
                 HttpResponseMessage response = await client.PostAsync("https://api.openai.com/v1/chat/completions", httpContent);
@@ -406,6 +382,17 @@ namespace ChatGptDesktop.ViewModel
                     var chatResponse = JsonConvert.DeserializeObject<ChatResponse>(jsonResponse);
                     string answerGpt = chatResponse.Choices[0].Message.Content.ToString();
                     AddMessage("assistant", answerGpt);
+                    Console.WriteLine("Получен ответ от ChatGPT.");
+
+                    //сохраняем запрос пользователя
+                    var userRequest = new UserRequestDb
+                    {
+                        UserInput = userInput,
+                        ProfileId = currentProfileId
+                    };
+
+                    _dbContext.UserRequests.Add(userRequest);
+                    await _dbContext.SaveChangesAsync();
 
                     return chatResponse;
                 }
