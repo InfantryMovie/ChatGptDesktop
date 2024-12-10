@@ -9,6 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Image\**" />
+    <EmbeddedResource Remove="Image\**" />
+    <None Remove="Image\**" />
+    <Page Remove="Image\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="View\Image\mail-upload.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
@@ -24,6 +35,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="View\Image\mail-upload.png" />
   </ItemGroup>
 
 </Project>

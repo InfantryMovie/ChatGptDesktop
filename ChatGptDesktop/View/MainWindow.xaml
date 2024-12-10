@@ -19,9 +19,9 @@
     </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="215*" />
-            <ColumnDefinition Width="21*" />
-            <ColumnDefinition Width="1044*" />
+            <ColumnDefinition Width="227*" />
+            <ColumnDefinition Width="12*" />
+            <ColumnDefinition Width="1036*" />
             <ColumnDefinition Width="5*" />
         </Grid.ColumnDefinitions>
 
@@ -36,8 +36,7 @@
             Grid.Row="0"
             Grid.RowSpan="3"
             Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Margin="0,0,20,0"
+            Margin="0"
             Background="#1b1a1a">
             <StackPanel>
                 <Border
@@ -50,7 +49,8 @@
                         Width="auto"
                         Height="75"
                         VerticalAlignment="Center"
-                        Background="Transparent"
+                        Background="#212121"
+                        BorderBrush="{x:Null}"
                         BorderThickness="0"
                         Command="{Binding ClearMessageContextCommand}"
                         Content="Очистить Контекст"
@@ -62,9 +62,8 @@
         <Grid
             x:Name="Grid_gptMessages"
             Grid.Row="0"
-            Grid.Column="1"
-            Grid.ColumnSpan="3"
-            Margin="20,0,20,0">
+            Grid.Column="2"
+            Margin="0">
             <ListBox
                 x:Name="MessagesListBox"
                 Width="{Binding ActualWidth, ElementName=Grid_gptMessages}"
@@ -138,7 +137,7 @@
             x:Name="Grid_gptSendMessages"
             Grid.Row="1"
             Grid.Column="2"
-            Grid.ColumnSpan="2">
+            Margin="0,0,0,0">
             <StackPanel
                 HorizontalAlignment="Center"
                 VerticalAlignment="Stretch"
@@ -146,33 +145,36 @@
                 <Border
                     Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType={x:Type StackPanel}}}"
                     MinWidth="800"
-                    HorizontalAlignment="Center"
+                    Padding="2"
+                    HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Background="#343333"
                     CornerRadius="25">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" />
+                    </Border.Effect>
                     <StackPanel
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
+                        Margin="10,0,10,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
                         Orientation="Vertical">
-                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                            <TextBox
-                                Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType={x:Type StackPanel}}}"
-                                MinWidth="800"
-                                MinHeight="80"
-                                MaxHeight="160"
-                                Margin="10"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Top"
-                                AcceptsReturn="True"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                FontSize="16"
-                                FontWeight="Bold"
-                                Foreground="White"
-                                KeyDown="TextBox_KeyDown"
-                                Text="{Binding UserInput, UpdateSourceTrigger=PropertyChanged}"
-                                TextWrapping="Wrap" />
-                        </ScrollViewer>
+                        <TextBox
+                            Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType={x:Type Border}}}"
+                            MinWidth="800"
+                            MaxWidth="800"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            VerticalContentAlignment="Stretch"
+                            AcceptsReturn="True"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            KeyDown="TextBox_KeyDown"
+                            Text="{Binding UserInput, UpdateSourceTrigger=PropertyChanged}"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Hidden" />
 
 
                         <!--
@@ -190,23 +192,28 @@
                     </StackPanel>
                 </Border>
 
-                <Border
-                    Width="75"
-                    Height="75"
-                    Margin="15,0,-15,0"
-                    Background="#343333"
-                    CornerRadius="100">
-                    <Button
-                        Width="75"
-                        Height="75"
-                        HorizontalAlignment="Center"
-                        HorizontalContentAlignment="Center"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Command="{Binding SendMessageCommand}"
-                        Content="Отправить"
-                        Foreground="White" />
-                </Border>
+                <Button
+                    Width="110"
+                    Height="80"
+                    Margin="10"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{Binding SendMessageCommand}"
+                    Foreground="White">
+                    <Image
+                        Width="80"
+                        Height="80"
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        Source="Image/mail-upload.png">
+                        <Image.Effect>
+                            <DropShadowEffect BlurRadius="3" ShadowDepth="3" />
+                        </Image.Effect>
+                    </Image>
+                </Button>
             </StackPanel>
 
 
